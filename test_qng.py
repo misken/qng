@@ -1,0 +1,71 @@
+__author__ = 'misken'
+
+import qng
+from nose.tools import assert_equals
+from nose.tools import assert_almost_equal
+
+def test_qng():
+
+    # Example 2.2 on pp91-93 of Gross and Harris, Fundamentals of Queueing Theory, 2ed
+    assert_almost_equal(qng.mmc_prob_n(0, 6, 3, 3), 1/9.0, 7)
+    assert_almost_equal(qng.mmc_mean_qsize(6, 3, 3), 8/9.0, 7)
+    assert_almost_equal(qng.mmc_mean_qwait(6, 3, 3), (8/9.0)/6.0, 7)
+    assert_almost_equal(1.0 - qng.erlangc(6.0/3.0, 3), 5/9.0, 7)
+    assert_almost_equal(qng.mmc_mean_systime(6, 3, 3), 13/27.0, 7)
+
+
+
+def test_cosmetatos():
+    # The following test the Cosmetatos approximation for Lq and Wq.
+    # Test values are from Table 1 on p601 of:
+    # Kimura, Toshikazu. Refining Cosmetatos' approximation for the mean waiting
+    # time in the M/D/s queue. Journal of the Operational Research Society (1991): 595-603.
+    mu = 1.0
+    c = 2
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * c, mu, c), 2.1445, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * c, mu, c), 0.4916, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * c, mu, c), 0.1757, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * c, mu, c), 0.0557, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * c, mu, c), 0.0075, 4)
+
+    c = 4
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * c, mu, c), 1.0000, 3)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * c, mu, c), 0.1890, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * c, mu, c), 0.0494, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * c, mu, c), 0.0087, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * c, mu, c), 0.000245, 6)
+
+    mu = 0.01
+    c = 25
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * mu * c, mu, c), 10.7922, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.8 * mu * c, mu, c), 2.3845, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * mu * c, mu, c), 0.5258, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.6 * mu * c, mu, c), 0.0853, 3)
+
+    mu = 0.01
+    c = 50
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * mu * c, mu, c), 3.9838, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.8 * mu * c, mu, c), 0.5275, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * mu * c, mu, c), 0.0502, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.6 * mu * c, mu, c), 0.0021, 3)
+
+def test_kimura():
+    # The following test the Kimura approximation for E[Wq] in M/G/c
+    # Test values are from Table 1 on p357 of:
+    # Kimura, Toshikazu. "Approximations for multi-server queues: system interpolations."
+    # Queueing Systems 17.3-4 (1994): 347-382.
+
+    mu = 1.0
+    c = 5
+    cv2 = 4.0
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.9 * c, mu, c, cv2), 16.26, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.7 * c, mu, c, cv2), 1.82, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.5 * c, mu, c, cv2), 0.23, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+
+    cv2 = 1.5
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.9 * c, mu, c, cv2), 8.50, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.7 * c, mu, c, cv2), 1.06, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.5 * c, mu, c, cv2), 0.15, 2)
+    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+
