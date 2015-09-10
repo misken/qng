@@ -531,3 +531,43 @@ def mgc_mean_qsize_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     mean_qsize = mean_qwait * arr_rate
 
     return mean_qsize
+
+
+def mgc_qcondwait_pctile_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
+    """
+    Return an approximate conditional queue wait percentile in M/G/c/inf system.
+
+    The approximation is based on a first order approximation using the M/M/c delay percentile.
+    See Tijms, H.C. (1994), "Stochastic Models: An Algorithmic Approach", John Wiley and Sons, Chichester
+    Chapter 4, p299-300
+
+    The percentile is conditional on Wq>0 (i.e. on event customer waits)
+
+    This 1st order approximation is OK for 0<=CVSquared<=2 and dblProb>1-Prob(Delay)
+    Note that for Prob(Delay) we use MMC as approximation for same quantity in MGC.
+    Justification in Tijms (p296)
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        percentile of conditional customer wait time
+
+    """
+
+    rho = load / float(c)
+    eb = erlangb(load, c)
+    ec = 1.0 / (rho + (1 - rho) * (1.0 / eb))
+
+    return ec
