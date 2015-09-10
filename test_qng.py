@@ -22,18 +22,18 @@ def test_cosmetatos():
     # time in the M/D/s queue. Journal of the Operational Research Society (1991): 595-603.
     mu = 1.0
     c = 2
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * c, mu, c), 2.1445, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * c, mu, c), 0.4916, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * c, mu, c), 0.1757, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * c, mu, c), 0.0557, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * c, mu, c), 0.0075, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * mu * c, mu, c), 2.1445, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * mu * c, mu, c), 0.4916, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * mu * c, mu, c), 0.1757, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * mu * c, mu, c), 0.0557, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * mu * c, mu, c), 0.0075, 4)
 
     c = 4
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * c, mu, c), 1.0000, 3)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * c, mu, c), 0.1890, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * c, mu, c), 0.0494, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * c, mu, c), 0.0087, 4)
-    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * c, mu, c), 0.000245, 6)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.9 * mu * c, mu, c), 1.0000, 3)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * mu * c, mu, c), 0.1890, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.5 * mu * c, mu, c), 0.0494, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.3 * mu * c, mu, c), 0.0087, 4)
+    assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.1 * mu * c, mu, c), 0.000245, 6)
 
     mu = 0.01
     c = 25
@@ -58,14 +58,20 @@ def test_kimura():
     mu = 1.0
     c = 5
     cv2 = 4.0
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.9 * c, mu, c, cv2), 16.26, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.7 * c, mu, c, cv2), 1.82, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.5 * c, mu, c, cv2), 0.23, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.9 * c, mu, c, cv2), 16.26, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.7 * c, mu, c, cv2), 1.82, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.5 * c, mu, c, cv2), 0.23, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
 
     cv2 = 1.5
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.9 * c, mu, c, cv2), 8.50, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.7 * c, mu, c, cv2), 1.06, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.5 * c, mu, c, cv2), 0.15, 2)
-    assert_almost_equal(qng.mgc_mean_qwait_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.9 * c, mu, c, cv2), 8.50, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.7 * c, mu, c, cv2), 1.06, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.5 * c, mu, c, cv2), 0.15, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+
+    cv2 = 0.5
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.9 * c, mu, c, cv2), 5.19, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.7 * c, mu, c, cv2), 0.68, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.5 * c, mu, c, cv2), 0.10, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
 

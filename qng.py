@@ -401,6 +401,41 @@ def mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time):
 
     return mean_qwait
 
+def mgc_mean_qsize_kimura(arr_rate, svc_rate, c, cv2_svc_time):
+    """
+    Return the approximate mean queue size in M/G/c/inf queue using Kimura approximation.
+
+    See Kimura, Toshikazu. "Approximations for multi-server queues: system interpolations."
+    Queueing Systems 17.3-4 (1994): 347-382.
+
+    It's based on interpolation between an M/D/c and a M/M/c queueing system.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean number of customers in queue
+
+    """
+
+
+
+    mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
+    mean_qsize = mean_qwait * arr_rate
+
+    return mean_qsize
+
+
 
 def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     """
