@@ -49,12 +49,13 @@ def test_cosmetatos():
     assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.7 * mu * c, mu, c), 0.0502, 4)
     assert_almost_equal(qng.mdc_mean_qwait_cosmetatos(0.6 * mu * c, mu, c), 0.0021, 3)
 
-def test_kimura():
+def test_kimura_bjorklund():
     # The following test the Kimura approximation for E[Wq] in M/G/c
     # Test values are from Table 1 on p357 of:
     # Kimura, Toshikazu. "Approximations for multi-server queues: system interpolations."
     # Queueing Systems 17.3-4 (1994): 347-382.
 
+   # Kimura
     mu = 1.0
     c = 5
     cv2 = 4.0
@@ -74,4 +75,25 @@ def test_kimura():
     assert_almost_equal(qng.mgc_mean_qsize_kimura(0.7 * c, mu, c, cv2), 0.68, 2)
     assert_almost_equal(qng.mgc_mean_qsize_kimura(0.5 * c, mu, c, cv2), 0.10, 1)
     assert_almost_equal(qng.mgc_mean_qsize_kimura(0.3 * c, mu, c, cv2), 0.01, 2)
+
+    # Bjorklund and Eddlin
+    mu = 1.0
+    c = 5
+    cv2 = 4.0
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.9 * c, mu, c, cv2), 16.96, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.7 * c, mu, c, cv2), 2.10, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.5 * c, mu, c, cv2), 0.29, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.3 * c, mu, c, cv2), 0.02, 2)
+
+    cv2 = 1.5
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.9 * c, mu, c, cv2), 8.55, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.7 * c, mu, c, cv2), 1.09, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.5 * c, mu, c, cv2), 0.16, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.3 * c, mu, c, cv2), 0.01, 2)
+
+    cv2 = 0.5
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.9 * c, mu, c, cv2), 5.18, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.7 * c, mu, c, cv2), 0.68, 2)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.5 * c, mu, c, cv2), 0.10, 1)
+    assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.3 * c, mu, c, cv2), 0.01, 2)
 

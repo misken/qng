@@ -123,17 +123,17 @@ def erlangcinv(prob, load):
 
     Returns
     -------
-    int
+    c : int
         number of servers
 
     """
 
     c = math.ceil(load)
     ec = erlangc(load, c)
-    if (ec <= prob):
+    if ec <= prob:
         return c
     else:
-        while (ec > prob):
+        while ec > prob:
             c += 1
             ec = erlangc(load, c)
 
@@ -171,7 +171,6 @@ def mmc_prob_n(n, arr_rate, svc_rate, c):
     # Step 0: Initialization - p[0] is initialized to one via creation method
 
     pbar = np.ones(max(n + 1, c))
-    p = np.ones(max(n + 1, c))
 
     # Step 1: compute pbar
 
@@ -245,7 +244,7 @@ def mmc_mean_qwait(arr_rate, svc_rate, c):
 
 def mmc_mean_systime(arr_rate, svc_rate, c):
     """
-    Return the the mean time in system (wait in queue + service time) in M/M/c/inf queue.
+    Return the mean time in system (wait in queue + service time) in M/M/c/inf queue.
 
     Uses mmc_mean_qsize along with Little's Law (via mmc_mean_qwait) and relationship between W and Wq..
 
@@ -266,6 +265,37 @@ def mmc_mean_systime(arr_rate, svc_rate, c):
     """
 
     return mmc_mean_qwait(arr_rate, svc_rate, c) + 1 / svc_rate
+
+
+def mmc_prob_wait_normalapprox(arr_rate, svc_rate, c):
+    """
+    Return the approximate probability of waiting (i.e. erlang C) in M/M/c/inf queue using a normal approximation.
+
+    Uses normal approximation approach by Kolesar and Green, "Insights
+    on Service System Design from a Normal Approximation to Erlang's
+    Delay Formula", POM, V7, No3, Fall 1998, pp282-293
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+
+    Returns
+    -------
+    float
+        approximate probability of delay in queue
+
+    """
+
+    load = arr_rate / svc_rate
+
+    prob_wait = 1.0 - stats.norm.cdf(c - load - 0.5) / math.sqrt(load)
+
+    return prob_wait
 
 
 def mmc_waitq_cdf(arr_rate, svc_rate, c, t):
@@ -401,6 +431,7 @@ def mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time):
 
     return mean_qwait
 
+
 def mgc_mean_qsize_kimura(arr_rate, svc_rate, c, cv2_svc_time):
     """
     Return the approximate mean queue size in M/G/c/inf queue using Kimura approximation.
@@ -428,13 +459,10 @@ def mgc_mean_qsize_kimura(arr_rate, svc_rate, c, cv2_svc_time):
 
     """
 
-
-
     mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
     mean_qsize = mean_qwait * arr_rate
 
     return mean_qsize
-
 
 
 def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
@@ -472,4 +500,34 @@ def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     return mean_qwait
 
 
+def mgc_mean_qsize_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
+    """
+    Return the approximate mean queue wait in M/G/c/inf queue using Bjorklund and Elldin approximation.
 
+    See Kimura, Toshikazu. "Approximations for multi-server queues: system interpolations."
+    Queueing Systems 17.3-4 (1994): 347-382.
+
+    It's based on interpolation between an M/D/c and a M/M/c queueing system.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean number of customers in queue
+
+    """
+
+    mean_qwait = mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time)
+    mean_qsize = mean_qwait * arr_rate
+
+    return mean_qsize
