@@ -2,6 +2,7 @@ __author__ = 'misken'
 
 import numpy as np
 import scipy.stats as stats
+import scipy.optimize
 import math
 
 
@@ -216,6 +217,36 @@ def mmc_mean_qsize(arr_rate, svc_rate, c):
 
     return mean_qsize
 
+def mmc_mean_syssize(arr_rate, svc_rate, c):
+    """
+    Return the the mean system size in M/M/c/inf queue.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+
+    Returns
+    -------
+    float
+        mean number of customers in queue + service
+
+    """
+
+    load = arr_rate / svc_rate
+    rho = load / float(c)
+
+    mean_qsize = (rho ** 2 / (1 - rho) ** 2) * mmc_prob_n(c - 1, arr_rate, svc_rate, c)
+
+    mean_syssize = mean_qsize + load
+
+    return mean_syssize
+
+
 
 def mmc_mean_qwait(arr_rate, svc_rate, c):
     """
@@ -298,7 +329,39 @@ def mmc_prob_wait_normalapprox(arr_rate, svc_rate, c):
     return prob_wait
 
 
-def mmc_waitq_cdf(arr_rate, svc_rate, c, t):
+def mm1_waitq_cdf(t, arr_rate, svc_rate):
+    """
+    Return P(Wq < t) in M/M/1/inf queue.
+
+
+    Parameters
+    ----------
+    t : float
+        wait time of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+
+
+    Returns
+    -------
+    float
+        probability wait time in queue is < t
+
+    """
+
+    rho = arr_rate / svc_rate
+
+    term1 = rho
+    term2 = -svc_rate * (1 - rho) * t
+
+    prob_wq_lt_t = 1.0 - term1 * math.exp(term2)
+
+    return prob_wq_lt_t
+
+
+def mmc_waitq_cdf(t, arr_rate, svc_rate, c):
     """
     Return P(Wq < t) in M/M/c/inf queue.
 
@@ -327,9 +390,79 @@ def mmc_waitq_cdf(arr_rate, svc_rate, c, t):
     term2 = mmc_prob_n(c - 1, arr_rate, svc_rate, c)
     term3 = -c * svc_rate * (1 - rho) * t
 
-    prob_wq_lt_t = 1.0 + term1 * term2 * math.exp(term3)
+    prob_wq_lt_t = 1.0 - term1 * term2 * math.exp(term3)
 
     return prob_wq_lt_t
+
+def mm1_waitq_pctile(p, arr_rate, svc_rate):
+    """
+    Return p'th percentile of P(Wq < t) in M/M/c/inf queue.
+
+
+    Parameters
+    ----------
+    p : float
+        percentile of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+
+
+    Returns
+    -------
+    float
+        t such that P(wait time in queue is < t) = p
+
+    """
+
+    # For initial guess, we'll use percentile from similar M/M/1 system
+    init_guess = 1/svc_rate
+
+
+    waitq_pctile = scipy.optimize.newton(_mm1_waitq_pctile_wrap,init_guess,args=(p, arr_rate, svc_rate))
+
+    return waitq_pctile
+
+
+def _mm1_waitq_pctile_wrap(t, p, arr_rate, svc_rate):
+    return mm1_waitq_cdf(t, arr_rate, svc_rate) - p
+
+
+def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
+    """
+    Return p'th percentile of P(Wq < t) in M/M/c/inf queue.
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    p : float
+        percentile of interest
+
+    Returns
+    -------
+    float
+        t such that P(wait time in queue is < t) = p
+
+    """
+
+    # For initial guess, we'll use percentile from similar M/M/1 system
+    #TODO - finish initialization
+    init_guess = mm1_waitq_pctile(p, arr_rate, c * svc_rate)
+
+    waitq_pctile = scipy.optimize.newton(_mmc_waitq_pctile_wrap,init_guess,args=(p, arr_rate, svc_rate, c))
+
+    return waitq_pctile
+
+
+def _mmc_waitq_pctile_wrap(t, p, arr_rate, svc_rate, c):
+    return mmc_waitq_cdf(t, arr_rate, svc_rate, c) - p
 
 
 def mdc_mean_qwait_cosmetatos(arr_rate, svc_rate, c):
@@ -533,7 +666,7 @@ def mgc_mean_qsize_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     return mean_qsize
 
 
-def mgc_qcondwait_pctile_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
+def mgc_qcondwait_pctile_firstorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
     """
     Return an approximate conditional queue wait percentile in M/G/c/inf system.
 
@@ -543,7 +676,7 @@ def mgc_qcondwait_pctile_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
 
     The percentile is conditional on Wq>0 (i.e. on event customer waits)
 
-    This 1st order approximation is OK for 0<=CVSquared<=2 and dblProb>1-Prob(Delay)
+    This 1st order approximation is OK for 0<=CVSquared<=2 and prob>1-Prob(Delay)
     Note that for Prob(Delay) we use MMC as approximation for same quantity in MGC.
     Justification in Tijms (p296)
 

@@ -6,6 +6,17 @@ from nose.tools import assert_almost_equal
 
 def test_qng():
 
+    # Example 2.1 on pp74 of Gross and Harris, Fundamentals of Queueing Theory, 2ed
+    barber_arr = 5
+    barber_svc = 6
+    barber_c = 1
+
+    assert_almost_equal(qng.mmc_mean_qsize(barber_arr, barber_svc, barber_c), 4.0 + 1/6.0, 7)
+    assert_almost_equal(qng.mmc_mean_syssize(barber_arr, barber_svc, barber_c), 5.0, 7)
+    assert_almost_equal(qng.mm1_waitq_cdf(1.0,barber_arr, barber_svc), 1.0 - 0.3065662, 7)
+    assert_almost_equal(qng.mmc_waitq_cdf(1.0,barber_arr, barber_svc, barber_c), 1.0 - 0.3065662, 7)
+
+
     # Example 2.2 on pp91-93 of Gross and Harris, Fundamentals of Queueing Theory, 2ed
     assert_almost_equal(qng.mmc_prob_n(0, 6, 3, 3), 1/9.0, 7)
     assert_almost_equal(qng.mmc_mean_qsize(6, 3, 3), 8/9.0, 7)
