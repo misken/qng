@@ -13,8 +13,8 @@ def test_qng():
 
     assert_almost_equal(qng.mmc_mean_qsize(barber_arr, barber_svc, barber_c), 4.0 + 1/6.0, 7)
     assert_almost_equal(qng.mmc_mean_syssize(barber_arr, barber_svc, barber_c), 5.0, 7)
-    assert_almost_equal(qng.mm1_waitq_cdf(1.0,barber_arr, barber_svc), 1.0 - 0.3065662, 7)
-    assert_almost_equal(qng.mmc_waitq_cdf(1.0,barber_arr, barber_svc, barber_c), 1.0 - 0.3065662, 7)
+    assert_almost_equal(qng.mm1_qwait_cdf(1.0,barber_arr, barber_svc), 1.0 - 0.3065662, 7)
+    assert_almost_equal(qng.mmc_qwait_cdf(1.0,barber_arr, barber_svc, barber_c), 1.0 - 0.3065662, 7)
 
 
     # Example 2.2 on pp91-93 of Gross and Harris, Fundamentals of Queueing Theory, 2ed

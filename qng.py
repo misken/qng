@@ -145,7 +145,7 @@ def mmc_prob_n(n, arr_rate, svc_rate, c):
     """
     Return the the probability of n customers in system in M/M/c/inf queue.
 
-    Uses recursive approach from See Tijms, H.C. (1994), "Stochastic Models: An Algorithmic Approach",
+    Uses recursive approach from Tijms, H.C. (1994), "Stochastic Models: An Algorithmic Approach",
     John Wiley and Sons, Chichester (Section 4.5.1, p287)
 
 
@@ -329,7 +329,7 @@ def mmc_prob_wait_normalapprox(arr_rate, svc_rate, c):
     return prob_wait
 
 
-def mm1_waitq_cdf(t, arr_rate, svc_rate):
+def mm1_qwait_cdf(t, arr_rate, svc_rate):
     """
     Return P(Wq < t) in M/M/1/inf queue.
 
@@ -361,7 +361,7 @@ def mm1_waitq_cdf(t, arr_rate, svc_rate):
     return prob_wq_lt_t
 
 
-def mmc_waitq_cdf(t, arr_rate, svc_rate, c):
+def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
     """
     Return P(Wq < t) in M/M/c/inf queue.
 
@@ -394,7 +394,7 @@ def mmc_waitq_cdf(t, arr_rate, svc_rate, c):
 
     return prob_wq_lt_t
 
-def mm1_waitq_pctile(p, arr_rate, svc_rate):
+def mm1_qwait_pctile(p, arr_rate, svc_rate):
     """
     Return p'th percentile of P(Wq < t) in M/M/c/inf queue.
 
@@ -426,7 +426,7 @@ def mm1_waitq_pctile(p, arr_rate, svc_rate):
 
 
 def _mm1_waitq_pctile_wrap(t, p, arr_rate, svc_rate):
-    return mm1_waitq_cdf(t, arr_rate, svc_rate) - p
+    return mm1_qwait_cdf(t, arr_rate, svc_rate) - p
 
 
 def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
@@ -436,14 +436,15 @@ def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
 
     Parameters
     ----------
+    p : float
+        percentile of interest
     arr_rate : float
         average arrival rate to queueing system
     svc_rate : float
         average service rate (each server). 1/svc_rate is mean service time.
     c : int
         number of servers
-    p : float
-        percentile of interest
+
 
     Returns
     -------
@@ -453,8 +454,8 @@ def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
     """
 
     # For initial guess, we'll use percentile from similar M/M/1 system
-    #TODO - finish initialization
-    init_guess = mm1_waitq_pctile(p, arr_rate, c * svc_rate)
+
+    init_guess = mm1_qwait_pctile(p, arr_rate, c * svc_rate)
 
     waitq_pctile = scipy.optimize.newton(_mmc_waitq_pctile_wrap,init_guess,args=(p, arr_rate, svc_rate, c))
 
@@ -462,7 +463,8 @@ def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
 
 
 def _mmc_waitq_pctile_wrap(t, p, arr_rate, svc_rate, c):
-    return mmc_waitq_cdf(t, arr_rate, svc_rate, c) - p
+    return mmc_qwait_cdf(t, arr_rate, svc_rate, c) - p
+
 
 
 def mdc_mean_qwait_cosmetatos(arr_rate, svc_rate, c):
@@ -635,7 +637,7 @@ def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
 
 def mgc_mean_qsize_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     """
-    Return the approximate mean queue wait in M/G/c/inf queue using Bjorklund and Elldin approximation.
+    Return the approximate mean queue size in M/G/c/inf queue using Bjorklund and Elldin approximation.
 
     See Kimura, Toshikazu. "Approximations for multi-server queues: system interpolations."
     Queueing Systems 17.3-4 (1994): 347-382.
@@ -695,12 +697,115 @@ def mgc_qcondwait_pctile_firstorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc
     Returns
     -------
     float
-        percentile of conditional customer wait time
+        t such that P(wait time in queue is < t | wait time in queue is > 0) = prob
 
     """
 
-    rho = load / float(c)
-    eb = erlangb(load, c)
-    ec = 1.0 / (rho + (1 - rho) * (1.0 / eb))
+    load = arr_rate / svc_rate
+    # Compute corresponding prob for unconditional wait (see p274 of Tjims)
+    equivalent_uncond_prob = 1.0 - (1.0 - prob) * erlangc(load, c)
+    # Compute conditional wait time percentile for M/M/c system to use in approximation
+    condwaitq_pctile_mmc = mmc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+    # First order approximation for conditional wait time in queue
+    condwaitq_pctile = 0.5 * (1.0 + cv2_svc_time) * condwaitq_pctile_mmc
 
-    return ec
+    return condwaitq_pctile
+
+def mgc_qcondwait_pctile_secondorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
+    """
+    Return an approximate conditional queue wait percentile in M/G/c/inf system.
+
+    The approximation is based on a second order approximation using the M/M/c delay percentile.
+    See Tijms, H.C. (1994), "Stochastic Models: An Algorithmic Approach", John Wiley and Sons, Chichester
+    Chapter 4, p299-300
+
+    The percentile is conditional on Wq>0 (i.e. on event customer waits)
+
+    This approximation is based on interpolation between corresponding M/M/c and M/D/c systems.
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        t such that P(wait time in queue is < t | wait time in queue is > 0) = prob
+
+    """
+
+    load = arr_rate / svc_rate
+    # Compute corresponding prob for unconditional wait (see p274 of Tjims)
+    equivalent_uncond_prob = 1.0 - (1.0 - prob) * erlangc(load, c)
+
+    # Compute conditional wait time percentile for M/M/c system to use in approximation
+    condwaitq_pctile_mmc = mmc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+
+    # Compute conditional wait time percentile for M/D/c system to use in approximation
+    condwaitq_pctile_mdc = mdc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+
+    # First order approximation for conditional wait time in queue
+    condwaitq_pctile = 0.5 * (1.0 + cv2_svc_time) * condwaitq_pctile_mmc
+
+    return condwaitq_pctile
+
+def mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time):
+    """
+    Return the mean queue size in M/G/1/inf queue using P-K formula.
+
+    See any decent queueing book.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean number of customers in queue
+
+    """
+
+    rho = arr_rate / svc_rate
+    mean_qsize = (arr_rate ** 2) * cv2_svc_time/(2 * (1.0 - rho))
+
+    return mean_qsize
+
+def mg1_mean_qwait(arr_rate, svc_rate, cv2_svc_time):
+    """
+    Return the mean queue wait in M/G/1/inf queue using P-K formula along with Little's Law.
+
+    See any decent queueing book.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+    """
+
+    mean_qsize = mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time)
+    mean_qwait = mean_qsize / arr_rate
+
+    return mean_qwait
