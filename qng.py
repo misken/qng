@@ -298,7 +298,7 @@ def mmc_mean_systime(arr_rate, svc_rate, c):
     return mmc_mean_qwait(arr_rate, svc_rate, c) + 1 / svc_rate
 
 
-def mmc_prob_wait_normalapprox(arr_rate, svc_rate, c):
+def mmc_prob_wait_normal(arr_rate, svc_rate, c):
     """
     Return the approximate probability of waiting (i.e. erlang C) in M/M/c/inf queue using a normal approximation.
 
@@ -327,6 +327,39 @@ def mmc_prob_wait_normalapprox(arr_rate, svc_rate, c):
     prob_wait = 1.0 - stats.norm.cdf(c - load - 0.5) / math.sqrt(load)
 
     return prob_wait
+
+
+def mgc_prob_wait_erlangc(arr_rate, svc_rate, c):
+    """
+    Return the approximate probability of waiting in M/G/c/inf queue using Erlang-C as approximation.
+
+    It's well known that the Erlang-C formula, P(W>0) in M/M/c is a good approximation for
+    P(W>0) in M/G/c. See, for example, Tjims (1994) on p296 or Whitt (1993) "Approximations
+    for the GI/G/m queue", Production and Operations Management, 2, 2.
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+
+    Returns
+    -------
+    float
+        approximate probability of delay in queue
+
+    """
+
+    load = arr_rate / svc_rate
+
+    prob_wait = erlangc(load, c)
+
+    return prob_wait
+
 
 
 def mm1_qwait_cdf(t, arr_rate, svc_rate):
@@ -429,7 +462,7 @@ def _mm1_waitq_pctile_wrap(t, p, arr_rate, svc_rate):
     return mm1_qwait_cdf(t, arr_rate, svc_rate) - p
 
 
-def mmc_waitq_pctile(p, arr_rate, svc_rate, c):
+def mmc_qwait_pctile(p, arr_rate, svc_rate, c):
     """
     Return p'th percentile of P(Wq < t) in M/M/c/inf queue.
 
@@ -705,7 +738,7 @@ def mgc_qcondwait_pctile_firstorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc
     # Compute corresponding prob for unconditional wait (see p274 of Tjims)
     equivalent_uncond_prob = 1.0 - (1.0 - prob) * erlangc(load, c)
     # Compute conditional wait time percentile for M/M/c system to use in approximation
-    condwaitq_pctile_mmc = mmc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+    condwaitq_pctile_mmc = mmc_qwait_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
     # First order approximation for conditional wait time in queue
     condwaitq_pctile = 0.5 * (1.0 + cv2_svc_time) * condwaitq_pctile_mmc
 
@@ -747,13 +780,14 @@ def mgc_qcondwait_pctile_secondorder_2moment(prob, arr_rate, svc_rate, c, cv2_sv
     equivalent_uncond_prob = 1.0 - (1.0 - prob) * erlangc(load, c)
 
     # Compute conditional wait time percentile for M/M/c system to use in approximation
-    condwaitq_pctile_mmc = mmc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+    condwaitq_pctile_mmc = mmc_qwait_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
 
     # Compute conditional wait time percentile for M/D/c system to use in approximation
-    condwaitq_pctile_mdc = mdc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
+    # TODO: implement mdc_qwait_pctile
+    condqwait_pctile_mdc = mdc_waitq_pctile(equivalent_uncond_prob, arr_rate, svc_rate, c)
 
-    # First order approximation for conditional wait time in queue
-    condwaitq_pctile = 0.5 * (1.0 + cv2_svc_time) * condwaitq_pctile_mmc
+    # Second order approximation for conditional wait time in queue
+    condwaitq_pctile = (1.0 - cv2_svc_time) * condqwait_pctile_mdc + cv2_svc_time * condwaitq_pctile_mmc
 
     return condwaitq_pctile
 
