@@ -401,14 +401,15 @@ def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
 
     Parameters
     ----------
+    t : float
+        wait time of interest
     arr_rate : float
         average arrival rate to queueing system
     svc_rate : float
         average service rate (each server). 1/svc_rate is mean service time.
     c : int
         number of servers
-    t : float
-        wait time of interest
+
 
     Returns
     -------
@@ -632,6 +633,39 @@ def mgc_mean_qsize_kimura(arr_rate, svc_rate, c, cv2_svc_time):
 
     return mean_qsize
 
+def mgc_qwait_cdf_SOMEAPPROX(t, arr_rate, svc_rate, c, cv2_svc_time):
+    """
+    Return the approximate P(Wq <= t) in M/G/c/inf queue using SOME APPROXIMATION.
+
+    See RELEVANT REFERENCE
+
+    It's based on SOMETHING CLEVER AND THAT WORKS WELL
+
+    Parameters
+    ----------
+    t : float
+        wait time of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        ~ P(Wq <= t)
+
+    """
+# TODO Pick approximation and implement it
+
+    mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
+    mean_qsize = mean_qwait * arr_rate
+
+    return mean_qsize
 
 def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     """
@@ -818,7 +852,8 @@ def mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time):
 
     return mean_qsize
 
-def mg1_mean_qwait(arr_rate, svc_rate, cv2_svc_time):
+
+def mg1_mean_qwait(arr_rate, svc_rate, cs2):
     """
     Return the mean queue wait in M/G/1/inf queue using P-K formula along with Little's Law.
 
@@ -830,7 +865,7 @@ def mg1_mean_qwait(arr_rate, svc_rate, cv2_svc_time):
         average arrival rate to queueing system
     svc_rate : float
         average service rate (each server). 1/svc_rate is mean service time.
-    cv2_svc_time : float
+    cs2 : float
         squared coefficient of variation for service time distribution
 
     Returns
@@ -839,7 +874,216 @@ def mg1_mean_qwait(arr_rate, svc_rate, cv2_svc_time):
         mean wait time in queue
     """
 
-    mean_qsize = mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time)
+    mean_qsize = mg1_mean_qsize(arr_rate, svc_rate, cs2)
     mean_qwait = mean_qsize / arr_rate
 
     return mean_qwait
+
+
+def gamma_0(m, rho):
+    """
+    See p124 immediately after Eq 2.16.
+
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    term1 = 0.24
+    term2 = (1 - rho) * (m - 1) * (math.sqrt(4 + 5 * m) - 2 ) / (16 * m * rho)
+
+    return min(term1, term2)
+
+
+def phi_1(m, rho):
+    """
+    See p124 immediately after Eq 2.16.
+
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    return 1.0 + gamma_0(m, rho)
+
+
+def phi_2(m, rho):
+    """
+    See p124 immediately after Eq 2.18.
+
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    return 1.0 - 4 * gamma_0(m, rho)
+
+
+def phi_3(m, rho):
+    """
+    See p124 immediately after Eq 2.20.
+
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    term1 = phi_2(m, rho)
+    term2 = math.exp(-2 * (1 - rho) / 3 * rho)
+    return term1 * term2
+
+
+def phi_4(m, rho):
+    """
+    See p125 , Eq 2.21.
+
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+    term1 = 1.0
+    term2 = 0.5 * (phi_1(m, rho) + phi_3(m, rho))
+    return min(term1, term2)
+
+
+def psi_0(c2, m, rho):
+    """
+    See p125 , Eq 2.22.
+
+    :param c2: float
+        common squared CV for both arrival and service process
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    if c2 >= 1:
+        return 1.0
+    else:
+        return phi_4(m, rho) ** (2 * (1 - c2))
+
+
+def phi_0(rho, ca2, cs2, m):
+    """
+    See p125 , Eq 2.25.
+
+    :param c2: float
+        common squared CV for both arrival and service process
+    :param m: int
+        number of servers
+    :param rho: float
+        lambda / (mu * m)
+    :return: float
+
+    """
+
+    if ca2 >= cs2:
+        term1 = phi_1(m, rho) * 4 * (ca2 - cs2) / (4 * ca2 - 3 * cs2)
+        term2 = (cs2 / (4 * ca2 - 3 * cs2)) * psi_0((ca2 + cs2)/2.0, m, rho)
+        return term1 + term2
+    else:
+        term1 = phi_3(m, rho) * (cs2 - ca2) / (2 * ca2 + 2 * cs2)
+        term2 = ((cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2)) * psi_0((ca2 + cs2)/2.0, m, rho)
+        return term1 + term2
+
+
+def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate mean queue size in GI/G/c/inf queue using Whitt's 1993 approximation.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+
+
+    rho = arr_rate / (svc_rate * float(m))
+
+    # Now implement Eq 2.24 on p 125
+
+    term1 = phi_0(rho, ca2, cs2, m)
+    term2 = 0.5 * (ca2 + cs2)
+    term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
+
+    return term1 * term2 * term3
+
+
+def dgm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate mean queue size in GI/G/c/inf queue using Whitt's 1993 approximation.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+
+
+    rho = arr_rate / (svc_rate * float(m))
+
+    # Now implement Eq 2.20 on p 124
+
+    term1 = phi_3(m, rho)
+    term2 = 0.5 * (ca2 + cs2)
+    term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
+
+    return term1 * term2 * term3
