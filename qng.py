@@ -1399,6 +1399,44 @@ def ggm_prob_wait_whitt_pi(m, rho, ca2, cs2):
 
     return pi
 
+
+def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
+    """
+    Equation 3.10 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+    z = ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
+
+    if m <= 6 or gamma <= 0.5 or ca2 >= 1:
+        whichpi = 1
+    elif m >= 7 and gamma >= 1.0 and ca2 < 1:
+        whichpi = 2
+    else:
+        whichpi = 3
+
+    return whichpi
+
+
 def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
     """
     Return the approximate mean queue size in GI/G/c/inf queue using Whitt's 1993 approximation and Little's Law.

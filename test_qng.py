@@ -108,3 +108,16 @@ def test_kimura_bjorklund():
     assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.5 * c, mu, c, cv2), 0.10, 1)
     assert_almost_equal(qng.mgc_mean_qsize_bjorklund(0.3 * c, mu, c, cv2), 0.01, 2)
 
+
+def test_whitt_prob_wait():
+    # M/M/4
+    exact = 0.79
+    whitt = 0.79
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, 1.0, 1.0)
+    print(exact, whitt, approx)
+
+test_whitt_prob_wait()
