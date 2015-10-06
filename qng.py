@@ -925,7 +925,7 @@ def phi_2(m, rho):
 
     """
 
-    return 1.0 - 4 * gamma_0(m, rho)
+    return 1.0 - 4.0 * gamma_0(m, rho)
 
 
 def phi_3(m, rho):
@@ -941,7 +941,7 @@ def phi_3(m, rho):
     """
 
     term1 = phi_2(m, rho)
-    term2 = math.exp(-2 * (1 - rho) / (3 * rho))
+    term2 = math.exp(-2.0 * (1 - rho) / (3.0 * rho))
     return term1 * term2
 
 
@@ -1004,7 +1004,6 @@ def phi_0(rho, ca2, cs2, m):
         return term1 + term2
     else:
         term1 = phi_3(m, rho) * ( (cs2 - ca2) / (2 * ca2 + 2 * cs2) )
-        # term2 = ( (cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2) )
         term2 = ( (cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2) )
         term3 = psi_0((ca2 + cs2)/2.0, m, rho)
         check = term2 * term3 / term1
@@ -1041,17 +1040,177 @@ def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
 
     """
 
+    rho = arr_rate / (svc_rate * float(m))
 
+    # Now implement Eq 2.24 on p 125
+
+    # Hack - for some reason I can't get this approximation to match Table 2 in the above
+    # reference for the case of D/M/m. However, if I use Eq 2.20 (specific for the D/M/m case),
+    # I do match the expected results. So, for now, I'll trap for this case.
+
+    if ca2 == 0 and cs2 == 1:
+        qwait = dmm_mean_qwait_whitt(arr_rate, svc_rate, m)
+
+    else:
+        term1 = phi_0(rho, ca2, cs2, m)
+        term2 = 0.5 * (ca2 + cs2)
+        term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
+
+        qwait = term1 * term2 * term3
+
+    return qwait
+
+
+def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate P(Wq > 0) in GI/G/c/inf queue using Whitt's 1993 approximation.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+    rho = arr_rate / (svc_rate * float(m))
+
+    # For ca2 = 1 (e.g. Poisson arrivals), Whitt uses fact that Erlang-C works well for M/G/c
+
+    if ca2 == 1:
+        pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
+
+    else:
+
+
+    return pwait
+
+
+def ggm_prob_wait_whitt_z(ca2, cs2):
+    """
+    Equation 3.8 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+
+    Parameters
+    ----------
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        approximation for intermediate term z (see Eq 3.6)
+
+    """
+
+    z = (ca2 + cs2) / (1.0 + cs2)
+
+
+    return z
+
+
+def ggm_prob_wait_whitt_gamma(m, rho, z):
+    """
+    Return the approximate P(Wq > 0) in GI/G/c/inf queue using Whitt's 1993 approximation.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    z : float
+        intermediate term approximated in Eq 3.8
+
+    Returns
+    -------
+    float
+        intermediate term gamma (see Eq 3.56)
+
+    """
+
+    rho = arr_rate / (svc_rate * float(m))
+
+    # For ca2 = 1 (e.g. Poisson arrivals), Whitt uses fact that Erlang-C works well for M/G/c
+
+    if ca2 == 1:
+        pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
+
+    else:
+
+
+    return pwait
+
+
+
+def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate mean queue size in GI/G/c/inf queue using Whitt's 1993 approximation and Little's Law.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
 
     rho = arr_rate / (svc_rate * float(m))
 
     # Now implement Eq 2.24 on p 125
 
-    term1 = phi_0(rho, ca2, cs2, m)
-    term2 = 0.5 * (ca2 + cs2)
-    term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
+    # Hack - for some reason I can't get this approximation to match Table 2 in the above
+    # reference for the case of D/M/m. However, if I use Eq 2.20 (specific for the D/M/m case),
+    # I do match the expected results. So, for now, I'll trap for this case.
 
-    return term1 * term2 * term3
+    qwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, ca2, cs2)
+
+    # Now use Little's Law
+    return qwait * arr_rate
 
 
 def dmm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
