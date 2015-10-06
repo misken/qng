@@ -1098,7 +1098,8 @@ def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
 
     else:
-
+        pi = ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2)
+        pwait = min(pi, 1)
 
     return pwait
 
@@ -1133,12 +1134,10 @@ def ggm_prob_wait_whitt_z(ca2, cs2):
 
 def ggm_prob_wait_whitt_gamma(m, rho, z):
     """
-    Return the approximate P(Wq > 0) in GI/G/c/inf queue using Whitt's 1993 approximation.
+    Equation 3.5 on p136 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
     See Whitt, Ward. "Approximations for the GI/G/m queue"
     Production and Operations Management 2, 2 (Spring 1993): 114-161.
-
-    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
 
     Parameters
     ----------
@@ -1152,23 +1151,253 @@ def ggm_prob_wait_whitt_gamma(m, rho, z):
     Returns
     -------
     float
-        intermediate term gamma (see Eq 3.56)
+        intermediate term gamma (see Eq 3.5)
 
     """
 
-    rho = arr_rate / (svc_rate * float(m))
+    term1 = m - m * rho - 0.5
+    term2 = math.sqrt(m * rho * z)
+    gamma = term1 / term2
 
-    # For ca2 = 1 (e.g. Poisson arrivals), Whitt uses fact that Erlang-C works well for M/G/c
+    return gamma
 
-    if ca2 == 1:
-        pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
 
+def ggm_prob_wait_whitt_pi_6(m, rho, z):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    z : float
+        intermediate term approximated in Eq 3.8
+
+    Returns
+    -------
+    float
+        intermediate term pi_6 (see Eq 3.11)
+
+    """
+
+    pi_6 = 1.0 - stats.norm.cdf((m - m * rho - 0.5) / math.sqrt(m * rho * z))
+
+    return pi_6
+
+
+def ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+
+    term1 = 2.0 * (1.0 - rho) * math.sqrt(m) / (1.0 + ca2)
+    term2 = (1.0 - rho) * math.sqrt(m)
+
+    term3 = erlangc(rho * m, m) * (1.0 - stats.norm.cdf(term1)) / (1.0 - stats.norm.cdf(term2))
+
+    pi_5 = min(1.0,term3)
+
+    return pi_5
+
+
+def ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+
+    term1 = (1.0 + cs2) * (1.0 - rho) * math.sqrt(m) / (ca2 + cs2)
+    term2 = (1.0 - rho) * math.sqrt(m)
+
+    term3 = erlangc(rho * m, m) * (1.0 - stats.norm.cdf(term1)) / (1.0 - stats.norm.cdf(term2))
+
+    pi_4 = min(1.0,term3)
+
+    return pi_4
+
+
+def ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+
+    pi_4 = ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2)
+    pi_5 = ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2)
+
+    pi_1 = (rho ** 2) * pi_4 + (1.0 - rho **2) * pi_5
+
+    return pi_1
+
+
+def ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+
+    pi_1 = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+    pi_6 = ggm_prob_wait_whitt_pi_6(m, rho, ca2, cs2)
+
+    pi_2 = ca2 * pi_1 + (1.0 - ca2) * pi_6
+
+    return pi_2
+
+
+def ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2):
+    """
+    Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+    z = ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
+    pi_2 = ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
+    pi_1 = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+
+    term1 = 2.0 * (1.0 - ca2) * (gamma - 0.5)
+    term2 = 1.0 - term1
+
+    pi_3 = term1 * pi_2 + term2 * pi_1
+
+    return pi_3
+
+
+def ggm_prob_wait_whitt_pi(m, rho, ca2, cs2):
+    """
+    Equation 3.10 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    m : int
+        number of servers
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        intermediate term pi_5(see Eq 3.11)
+
+    """
+    z = ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
+
+    if m <= 6 or gamma <= 0.5 or ca2 >= 1:
+        pi = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+    elif m >= 7 and gamma >= 1.0 and ca2 < 1:
+        pi = ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
     else:
+        pi = ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2)
 
-
-    return pwait
-
-
+    return pi
 
 def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
     """
