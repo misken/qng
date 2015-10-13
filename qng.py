@@ -1098,7 +1098,7 @@ def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
 
     else:
-        pi = ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2)
+        pi = ggm_prob_wait_whitt_pi(m, rho, ca2, cs2)
         pwait = min(pi, 1)
 
     return pwait
