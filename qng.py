@@ -898,7 +898,7 @@ def gamma_0(m, rho):
     return min(term1, term2)
 
 
-def phi_1(m, rho):
+def ggm_mean_qwait_whitt_phi_1(m, rho):
     """
     See p124 immediately after Eq 2.16.
 
@@ -913,7 +913,7 @@ def phi_1(m, rho):
     return 1.0 + gamma_0(m, rho)
 
 
-def phi_2(m, rho):
+def ggm_mean_qwait_whitt_phi_2(m, rho):
     """
     See p124 immediately after Eq 2.18.
 
@@ -928,7 +928,7 @@ def phi_2(m, rho):
     return 1.0 - 4.0 * gamma_0(m, rho)
 
 
-def phi_3(m, rho):
+def ggm_mean_qwait_whitt_phi_3(m, rho):
     """
     See p124 immediately after Eq 2.20.
 
@@ -940,12 +940,12 @@ def phi_3(m, rho):
 
     """
 
-    term1 = phi_2(m, rho)
+    term1 = ggm_mean_qwait_whitt_phi_2(m, rho)
     term2 = math.exp(-2.0 * (1 - rho) / (3.0 * rho))
     return term1 * term2
 
 
-def phi_4(m, rho):
+def ggm_mean_qwait_whitt_phi_4(m, rho):
     """
     See p125 , Eq 2.21.
 
@@ -957,11 +957,11 @@ def phi_4(m, rho):
 
     """
     term1 = 1.0
-    term2 = 0.5 * (phi_1(m, rho) + phi_3(m, rho))
+    term2 = 0.5 * (ggm_mean_qwait_whitt_phi_1(m, rho) + ggm_mean_qwait_whitt_phi_3(m, rho))
     return min(term1, term2)
 
 
-def psi_0(c2, m, rho):
+def ggm_mean_qwait_whitt_psi_0(c2, m, rho):
     """
     See p125 , Eq 2.22.
 
@@ -978,10 +978,10 @@ def psi_0(c2, m, rho):
     if c2 >= 1:
         return 1.0
     else:
-        return phi_4(m, rho) ** (2 * (1 - c2))
+        return ggm_mean_qwait_whitt_phi_4(m, rho) ** (2 * (1 - c2))
 
 
-def phi_0(rho, ca2, cs2, m):
+def ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m):
     """
     See p125 , Eq 2.25.
 
@@ -999,13 +999,13 @@ def phi_0(rho, ca2, cs2, m):
     """
 
     if ca2 >= cs2:
-        term1 = phi_1(m, rho) * (4 * (ca2 - cs2) / (4 * ca2 - 3 * cs2))
-        term2 = (cs2 / (4 * ca2 - 3 * cs2)) * psi_0((ca2 + cs2)/2.0, m, rho)
+        term1 = ggm_mean_qwait_whitt_phi_1(m, rho) * (4 * (ca2 - cs2) / (4 * ca2 - 3 * cs2))
+        term2 = (cs2 / (4 * ca2 - 3 * cs2)) * ggm_mean_qwait_whitt_psi_0((ca2 + cs2)/2.0, m, rho)
         return term1 + term2
     else:
-        term1 = phi_3(m, rho) * ( (cs2 - ca2) / (2 * ca2 + 2 * cs2) )
+        term1 = ggm_mean_qwait_whitt_phi_3(m, rho) * ( (cs2 - ca2) / (2 * ca2 + 2 * cs2) )
         term2 = ( (cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2) )
-        term3 = psi_0((ca2 + cs2)/2.0, m, rho)
+        term3 = ggm_mean_qwait_whitt_psi_0((ca2 + cs2)/2.0, m, rho)
         check = term2 * term3 / term1
         #print (check)
         return term1 + term2 * term3
@@ -1052,7 +1052,7 @@ def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         qwait = dmm_mean_qwait_whitt(arr_rate, svc_rate, m)
 
     else:
-        term1 = phi_0(rho, ca2, cs2, m)
+        term1 = ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m)
         term2 = 0.5 * (ca2 + cs2)
         term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
@@ -1404,6 +1404,8 @@ def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
     """
     Equation 3.10 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
+    Primarily used for debugging and validation of the approximation implementation.
+
     See Whitt, Ward. "Approximations for the GI/G/m queue"
     Production and Operations Management 2, 2 (Spring 1993): 114-161.
 
@@ -1420,8 +1422,8 @@ def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
 
     Returns
     -------
-    float
-        intermediate term pi_5(see Eq 3.11)
+    int
+        the pi case used in the approximation (1, 2, or 3)
 
     """
     z = ggm_prob_wait_whitt_z(ca2, cs2)
@@ -1435,6 +1437,393 @@ def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
         whichpi = 3
 
     return whichpi
+
+
+def ggm_qcondwait_whitt_ds3(cs2):
+    """
+    Return the approximate E(V^3)/(EV)^2 where V is a service time; based on either a hyperexponential
+    or Erlang distribution. Used in approximation of conditional wait time CDF (conditional on W>0).
+
+    Whitt refers to conditional wait as D in his paper:
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    This is Equation 4.3 on p146. Note that there is a typo in the original paper in which the first term
+    for Case 1 is shown as cubed, whereas it should be squared. This can be confirmed by seeing Eq 51 in
+    Whitt's paper on the QNA (Bell Systems Technical Journal, Nov 1983).
+
+    Parameters
+    ----------
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+    if cs2 >= 1:
+        ds3 = 3.0 * cs2 * (1.0 + cs2)
+    else:
+        ds3 = (2 * cs2 + 1.0) * (cs2 + 1.0)
+
+
+    return ds3
+
+
+
+def ggm_qcondwait_whitt_cd2(rho, cs2):
+    """
+    Return the approximate squared coefficient of conditional wait time (aka delay) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    This is Equation 4.2 on p145.
+
+    Parameters
+    ----------
+    rho : float
+        traffic intensity; arr_rate / (svc_rate * m)
+
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+    term1 = 2 * rho - 1.0
+    term2 = 4 * (1.0 - rho) * ggm_qcondwait_whitt_ds3(cs2)
+    term3 = 3.0 * (cs2 + 1.0) ** 2
+
+    cd2 = term1+ term2 / term3
+
+    return cd2
+
+def ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate squared coefficient of wait time in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        scv of wait time in queue
+
+    """
+
+    rho = arr_rate / (svc_rate * float(m))
+    pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+    cd2 = ggm_qcondwait_whitt_cd2(rho, cs2)
+
+    cw2 = (cd2 + 1 - pwait) / pwait
+
+    return cw2
+
+
+def ggm_qcondwait_whitt_vard(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate variance of conditional wait time (aka delay) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    rho = arr_rate / (svc_rate * float(m))
+    pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+    cd2 = ggm_qcondwait_whitt_cd2(rho, cs2)
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    vard = (meanwait ** 2) * cd2 / (pwait ** 2)
+
+    return vard
+
+
+def ggm_qcondwait_whitt_ed2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate 2nd moment of conditional wait time (aka delay) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+    vard = ggm_qcondwait_whitt_vard(arr_rate, svc_rate, m, ca2, cs2)
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    # Compute conditional wait
+    meandelay = meanwait / pwait
+
+    ed2 = vard + meandelay ** 2
+
+    return ed2
+
+
+def ggm_qwait_whitt_varw(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate variance of wait time (aka delay) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    cw2 = ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2)
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    varw = (meanwait ** 2) * cw2
+
+    return varw
+
+
+def ggm_qwait_whitt_ew2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate 2nd moment of wait time in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    varw = ggm_qwait_whitt_varw(arr_rate, svc_rate, m, ca2, cs2)
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    ew2 = varw + meanwait ** 2
+
+    return ew2
+
+
+def ggm_mean_sojourn_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate soujourn time (wait + service) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    sojourn = meanwait + 1.0 / svc_rate
+
+    return sojourn
+
+
+def ggm_sojourn_whitt_var(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate variance of soujourn time (wait + service) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    varwait = ggm_qwait_whitt_varw(arr_rate, svc_rate, m, ca2, cs2)
+
+    sojourn = varwait + cs2 * (1.0 / svc_rate) ** 2
+
+    return sojourn
+
+def ggm_sojourn_whitt_et2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate 2nd moment of soujourn time (wait + service) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    varsojourn = ggm_sojourn_whitt_var(arr_rate, svc_rate, m, ca2, cs2)
+    meansojourn = ggm_mean_sojourn_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    et2 = varsojourn + meansojourn ** 2
+
+    return et2
+
+
+def ggm_sojourn_whitt_cv2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate scv of soujourn time (wait + service) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    varsojourn = ggm_sojourn_whitt_var(arr_rate, svc_rate, m, ca2, cs2)
+    meansojourn = ggm_mean_sojourn_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    cv2 = varsojourn / meansojourn ** 2
+
+    return cv2
 
 
 def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
@@ -1516,7 +1905,7 @@ def dmm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
     # Now implement Eq 2.20 on p 124
 
-    term1 = phi_3(m, rho)
+    term1 = ggm_mean_qwait_whitt_phi_3(m, rho)
     term2 = 0.5 * (ca2 + cs2)
     term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
@@ -1558,7 +1947,7 @@ def mdm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
     # Now implement Eq 2.20 on p 124
 
-    term1 = phi_1(m, rho)
+    term1 = ggm_mean_qwait_whitt_phi_1(m, rho)
     term2 = 0.5 * (ca2 + cs2)
     term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 

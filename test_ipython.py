@@ -16,7 +16,7 @@ approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
 whichpi = qng.ggm_prob_wait_whitt_whichpi(rho, m, ca2, cs2)
 print("exact={0}, whitt={1}, mywhitt={2:6.3f}, simio={3}, whichpi={4}".format(exact, whitt, approx, simio, whichpi))
 
-# D/H2/4 (cs2=2.0) - PROBLEM
+# D/H2/4 (cs2=2.0) -
 exact = 0.70
 whitt = 0.71
 simio = 0.74

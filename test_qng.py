@@ -110,6 +110,11 @@ def test_kimura_bjorklund():
 
 
 def test_whitt_prob_wait():
+
+    # See Whitt, Ward. "Approximations for the GI/G/m queue"
+    # Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+
     # M/M/4
     exact = 0.79
     whitt = 0.79
@@ -117,7 +122,201 @@ def test_whitt_prob_wait():
     m = 4
     lam = rho * m
     mu = 1
-    approx = qng.ggm_prob_wait_whitt(lam, mu, m, 1.0, 1.0)
-    print(exact, whitt, approx)
+    ca2 = 1.0
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
 
-test_whitt_prob_wait()
+    # D/M/4
+    exact = 0.67
+    whitt = 0.65
+    simio = 0.664
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.0
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # H2/M/4 (ca2=2.25)
+    exact = 0.85
+    whitt = 0.85
+    simio = 0.845
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 2.25
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # E4/M/4
+    exact = 0.71
+    whitt = 0.70
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.25
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # G/M/4
+    exact = 0.75
+    whitt = 0.75
+    simio = 0 # Unknown G
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.56
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # M/D/4
+    exact = 0.78
+    whitt = 0.79
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 1.0
+    cs2 = 0.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # M/H2/4
+    exact = 0.79
+    whitt = 0.79
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 1.0
+    cs2 = 2.25
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # M/G/4
+    exact = 0.79
+    whitt = 0.79
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 1.0
+    cs2 = 0.75
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # D/H2/4 (cs2=2.0) -
+    exact = 0.70
+    whitt = 0.71
+    simio = 0.74
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.0
+    cs2 = 2.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # E2/H2/4
+    exact = 0.76
+    whitt = 0.76
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.5
+    cs2 = 2.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # D/H2/4 -
+    exact = 0.74
+    whitt = 0.75
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.0
+    cs2 = 9.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # H2/H2/4 - Need to simulate
+    exact = 0.92
+    whitt = 0.86
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 9.0
+    cs2 = 9.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # G/E2/4 - -
+    exact = 0.64
+    whitt = 0.60
+    simio = 0
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 0.1
+    cs2 = 0.5
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # D/M/20 - Matching whitt but not exact. Need to simulate this one
+    exact = 0.39
+    whitt = 0.31
+    simio = 0
+    rho = 0.9
+    m = 20
+    lam = rho * m
+    mu = 1
+    ca2 = 0.0
+    cs2 = 1.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # G/M/4 -
+    exact = 0.39
+    whitt = 0.38
+    simio = 0
+    rho = 0.6
+    m = 2
+    lam = rho * m
+    mu = 1
+    ca2 = 0.5
+    cs2 = 9.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
+
+    # H2/D/4 - pretty close. Simulation not matching exact.
+    exact = 0.86
+    whitt = 0.86
+    simio = 0.83
+    rho = 0.9
+    m = 4
+    lam = rho * m
+    mu = 1
+    ca2 = 2.25
+    cs2 = 0.0
+    approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
+    assert abs(whitt-approx) < 0.009
