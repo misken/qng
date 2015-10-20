@@ -2030,18 +2030,25 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
         ~ P(D <= t | )
 
     """
-# TODO Pick approximation and implement it
 
     rho = arr_rate / (svc_rate * float(m))
+
+    ed = ggm_mean_qwait_whitt(arr_rate, svc_rate, c, ca2, cs2) / ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
 
     cd2 = ggm_qcondwait_whitt_cd2(rho,cs2)
 
     if cd2 > 1.01:
         # Hyperexponential approx
-        pass
+
+        p1, gamma1, gamma2 = fit_balanced_hyperexpon2(ed, cd2)
+        p2 = 1.0 - p1
+
+        prob_wait_ltx = hyperexpon_cdf(t,[p1,p2],[gamma1,gamma2])
+
     elif cd2 >= 0.99 and cd2 <= 1.01:
         # Exponential approx
-        pass
+        prob_wait_ltx = stats.expon.cdf(t,scale=ed)
+
     elif cd2 >= 0.501 and cd2 < 0.99:
         # Convolution of two exponentials approx
         pass
@@ -2052,4 +2059,4 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
     mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
     mean_qsize = mean_qwait * arr_rate
 
-    return mean_qsize
+    return prob_wait_ltx
