@@ -1855,14 +1855,7 @@ def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
 
     """
 
-    rho = arr_rate / (svc_rate * float(m))
-
-    # Now implement Eq 2.24 on p 125
-
-    # Hack - for some reason I can't get this approximation to match Table 2 in the above
-    # reference for the case of D/M/m. However, if I use Eq 2.20 (specific for the D/M/m case),
-    # I do match the expected results. So, for now, I'll trap for this case.
-
+    # Use Eq 2.24 on p 125 to compute mean wait time in queue
     qwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, ca2, cs2)
 
     # Now use Little's Law
@@ -1945,10 +1938,118 @@ def mdm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
     rho = arr_rate / (svc_rate * float(m))
 
-    # Now implement Eq 2.20 on p 124
+    # Now implement Eq 2.16 on p 124
 
     term1 = ggm_mean_qwait_whitt_phi_1(m, rho)
     term2 = 0.5 * (ca2 + cs2)
     term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
     return term1 * term2 * term3
+
+
+def fit_balanced_hyperexpon2(mean, cs2):
+    """
+    Return the branching probability and rates for a balanced H2 distribution based
+    on a specified mean and scv. Intended for scv's > 1.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    cs2 : float
+        squared coefficient of variation for desired distribution
+
+    Returns
+    -------
+    tuple (float p, float rate1, float rate2)
+        branching probability and exponential rates
+
+    """
+
+    p1 = 0.5 * (1+math.sqrt((cs2-1) / (cs2+1)))
+    p2 = 1 - p1
+    mu1 = 2 * p1 / mean
+    mu2 = 2 * p2 / mean
+
+    return (p1, mu1, mu2)
+
+
+def hyperexpon_cdf(x, probs, rates):
+    """
+    Return the P(X < x) where X is hypergeometric with probabilities and exponential rates
+    in lists probs and rates.
+
+    Parameters
+    ----------
+    probs : list of floats
+        branching probabilities for hyperexponential
+
+    probs : list of floats
+        exponential rates
+
+    Returns
+    -------
+    float
+        P(X<x) where X~hyperexponetial(probs, rates)
+
+    """
+
+    sumproduct = sum([p * math.exp(-r * x) for (p,r) in zip(probs,rates)])
+    prob_lt_x = 1.0 - sumproduct
+
+    return prob_lt_x
+
+def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
+    """
+    Return the approximate P(D <= t) where D = (W|W>0) in G/G/m queue using Whitt's two moment
+    approximation.
+
+    See Section 4 of Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on an approach he originally used for G/G/1 queues in QNA. There are different
+    cases based on the value of an approximation for the scv of D.
+
+    Parameters
+    ----------
+    t : float
+        wait time of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        ~ P(D <= t | )
+
+    """
+# TODO Pick approximation and implement it
+
+    rho = arr_rate / (svc_rate * float(m))
+
+    cd2 = ggm_qcondwait_whitt_cd2(rho,cs2)
+
+    if cd2 > 1.01:
+        # Hyperexponential approx
+        pass
+    elif cd2 >= 0.99 and cd2 <= 1.01:
+        # Exponential approx
+        pass
+    elif cd2 >= 0.501 and cd2 < 0.99:
+        # Convolution of two exponentials approx
+        pass
+    else:
+        # Erlang approx
+        pass
+
+    mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
+    mean_qsize = mean_qwait * arr_rate
+
+    return mean_qsize
