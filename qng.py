@@ -2051,12 +2051,19 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
 
     elif cd2 >= 0.501 and cd2 < 0.99:
         # Convolution of two exponentials approx
-        pass
+        vard = ggm_qcondwait_whitt_vard(arr_rate, svc_rate, c, ca2, cs2)
+        gamma2 = 2.0 / (ed + math.sqrt(2 * vard - ed ** 2))
+        gamma1 = 1.0 / (ed - 1.0 / gamma2)
+
+        prob_wait_gtx = (gamma1 * math.exp(-gamma2 * t) - gamma2 * math.exp(-gamma1 * t)) / (gamma1 - gamma2)
+        prob_wait_ltx = 1.0 - prob_wait_gtx
     else:
         # Erlang approx
-        pass
+        gamma1 = 2.0 / ed
 
-    mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
-    mean_qsize = mean_qwait * arr_rate
+        prob_wait_gtx = math.exp(-gamma1 * t) * (1.0 + gamma1 * t)
+        prob_wait_ltx = 1.0 - prob_wait_gtx
+
+
 
     return prob_wait_ltx
