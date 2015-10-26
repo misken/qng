@@ -80,6 +80,7 @@ def erlangb(load, c):
         invb = 1.0 + invb * j / load
 
     b = 1.0 / invb
+
     return b
 
 
@@ -217,6 +218,7 @@ def mmc_mean_qsize(arr_rate, svc_rate, c):
 
     return mean_qsize
 
+
 def mmc_mean_syssize(arr_rate, svc_rate, c):
     """
     Return the the mean system size in M/M/c/inf queue.
@@ -245,7 +247,6 @@ def mmc_mean_syssize(arr_rate, svc_rate, c):
     mean_syssize = mean_qsize + load
 
     return mean_syssize
-
 
 
 def mmc_mean_qwait(arr_rate, svc_rate, c):
@@ -361,7 +362,6 @@ def mgc_prob_wait_erlangc(arr_rate, svc_rate, c):
     return prob_wait
 
 
-
 def mm1_qwait_cdf(t, arr_rate, svc_rate):
     """
     Return P(Wq < t) in M/M/1/inf queue.
@@ -427,6 +427,7 @@ def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
     prob_wq_lt_t = 1.0 - term1 * term2 * math.exp(term3)
 
     return prob_wq_lt_t
+
 
 def mm1_qwait_pctile(p, arr_rate, svc_rate):
     """
@@ -498,7 +499,6 @@ def mmc_qwait_pctile(p, arr_rate, svc_rate, c):
 
 def _mmc_waitq_pctile_wrap(t, p, arr_rate, svc_rate, c):
     return mmc_qwait_cdf(t, arr_rate, svc_rate, c) - p
-
 
 
 def mdc_mean_qwait_cosmetatos(arr_rate, svc_rate, c):
@@ -633,13 +633,22 @@ def mgc_mean_qsize_kimura(arr_rate, svc_rate, c, cv2_svc_time):
 
     return mean_qsize
 
-def mgc_qwait_cdf_SOMEAPPROX(t, arr_rate, svc_rate, c, cv2_svc_time):
+
+def mgc_qwait_cdf_whitt(t, arr_rate, svc_rate, c, cs2):
     """
-    Return the approximate P(Wq <= t) in M/G/c/inf queue using SOME APPROXIMATION.
+    Return the approximate P(Wq <= t) in M/G/c/inf queue using Whitt's G/C/c approximation.
 
-    See RELEVANT REFERENCE
+    Comparison of Whitt's approximation with the van Hoorn and Tijms M/G/c specific approximation suggests that using
+    Whitt's is sufficiently accurate and much easier in that we don't have to numerically integrate
+    excess service time distributions.
 
-    It's based on SOMETHING CLEVER AND THAT WORKS WELL
+    Whitt, Ward. "Approximations for the GI/G/m queue" Production and Operations Management 2, 2
+    (Spring 1993): 114-161.
+
+    van Hoorn, Michiel Harpert, and Hendrik Cornelis Tijms. "Approximations for the waiting time
+    distribution of the M/G/c queue." Performance Evaluation 2.1 (1982): 22-28.
+
+
 
     Parameters
     ----------
@@ -651,7 +660,7 @@ def mgc_qwait_cdf_SOMEAPPROX(t, arr_rate, svc_rate, c, cv2_svc_time):
         average service rate (each server). 1/svc_rate is mean service time.
     c : int
         number of servers
-    cv2_svc_time : float
+    cs2 : float
         squared coefficient of variation for service time distribution
 
     Returns
@@ -660,12 +669,12 @@ def mgc_qwait_cdf_SOMEAPPROX(t, arr_rate, svc_rate, c, cv2_svc_time):
         ~ P(Wq <= t)
 
     """
-# TODO Pick approximation and implement it
 
-    mean_qwait = mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time)
-    mean_qsize = mean_qwait * arr_rate
 
-    return mean_qsize
+    pwait_lt_t = ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, 1.0, cs2)
+
+    return pwait_lt_t
+
 
 def mgc_mean_qwait_bjorklund(arr_rate, svc_rate, c, cv2_svc_time):
     """
@@ -778,6 +787,7 @@ def mgc_qcondwait_pctile_firstorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc
 
     return condwaitq_pctile
 
+
 def mgc_qcondwait_pctile_secondorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc_time):
     """
     Return an approximate conditional queue wait percentile in M/G/c/inf system.
@@ -824,6 +834,7 @@ def mgc_qcondwait_pctile_secondorder_2moment(prob, arr_rate, svc_rate, c, cv2_sv
     condwaitq_pctile = (1.0 - cv2_svc_time) * condqwait_pctile_mdc + cv2_svc_time * condwaitq_pctile_mmc
 
     return condwaitq_pctile
+
 
 def mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time):
     """
@@ -942,6 +953,7 @@ def ggm_mean_qwait_whitt_phi_3(m, rho):
 
     term1 = ggm_mean_qwait_whitt_phi_2(m, rho)
     term2 = math.exp(-2.0 * (1 - rho) / (3.0 * rho))
+
     return term1 * term2
 
 
@@ -1127,7 +1139,6 @@ def ggm_prob_wait_whitt_z(ca2, cs2):
     """
 
     z = (ca2 + cs2) / (1.0 + cs2)
-
 
     return z
 
@@ -1474,7 +1485,6 @@ def ggm_qcondwait_whitt_ds3(cs2):
     return ds3
 
 
-
 def ggm_qcondwait_whitt_cd2(rho, cs2):
     """
     Return the approximate squared coefficient of conditional wait time (aka delay) in G/G/m queue
@@ -1506,6 +1516,7 @@ def ggm_qcondwait_whitt_cd2(rho, cs2):
     cd2 = term1+ term2 / term3
 
     return cd2
+
 
 def ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2):
     """
@@ -1541,6 +1552,39 @@ def ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2):
     cw2 = (cd2 + 1 - pwait) / pwait
 
     return cw2
+
+
+def ggm_qcondwait_whitt_ed(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate mean conditional wait time (aka delay) in G/G/m queue
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        variance of conditional wait time in queue
+
+    """
+
+    pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
+    meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2) / pwait
+
+    return meanwait
 
 
 def ggm_qcondwait_whitt_vard(arr_rate, svc_rate, m, ca2, cs2):
@@ -1755,6 +1799,7 @@ def ggm_sojourn_whitt_var(arr_rate, svc_rate, m, ca2, cs2):
     sojourn = varwait + cs2 * (1.0 / svc_rate) ** 2
 
     return sojourn
+
 
 def ggm_sojourn_whitt_et2(arr_rate, svc_rate, m, ca2, cs2):
     """
@@ -2000,6 +2045,7 @@ def hyperexpon_cdf(x, probs, rates):
 
     return prob_lt_x
 
+
 def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
     """
     Return the approximate P(D <= t) where D = (W|W>0) in G/G/m queue using Whitt's two moment
@@ -2031,7 +2077,7 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
 
     """
 
-    rho = arr_rate / (svc_rate * float(m))
+    rho = arr_rate / (svc_rate * float(c))
 
     ed = ggm_mean_qwait_whitt(arr_rate, svc_rate, c, ca2, cs2) / ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
 
@@ -2064,6 +2110,81 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
         prob_wait_gtx = math.exp(-gamma1 * t) * (1.0 + gamma1 * t)
         prob_wait_ltx = 1.0 - prob_wait_gtx
 
-
-
     return prob_wait_ltx
+
+
+def ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
+    """
+    Return the approximate P(W <= t) in G/G/m queue using Whitt's two moment
+    approximation for conditional wait and the P(W>0).
+
+    See Section 4 of Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    See ggm_qcondwait_cdf_whitt for more details.
+
+    Parameters
+    ----------
+    t : float
+        wait time of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        ~ P(W <= t | )
+
+    """
+
+
+    qcondwait = ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2)
+    pdelay = ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
+
+    qwait = qcondwait * pdelay + (1.0 - pdelay)
+
+    return qwait
+
+
+def ggm_qwait_pctile_whitt(p, arr_rate, svc_rate, c, ca2, cs2):
+    """
+    Return approx p'th percentile of P(Wq < t) in G/G/c/inf queue using Whitt's two moment
+    approximation for the wait time CDF
+
+
+    Parameters
+    ----------
+    p : float
+        percentile of interest
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+
+
+    Returns
+    -------
+    float
+        t such that P(wait time in queue is < t) = p
+
+    """
+
+    # For initial guess, we'll use percentile from similar M/M/1 system
+
+    init_guess = mm1_qwait_pctile(p, arr_rate, c * svc_rate)
+
+    waitq_pctile = scipy.optimize.newton(_ggm_waitq_pctile_whitt_wrap,init_guess,args=(p, arr_rate, svc_rate, c, ca2, cs2))
+
+    return waitq_pctile
+
+
+def _ggm_waitq_pctile_whitt_wrap(t, p, arr_rate, svc_rate, c, ca2, cs2):
+    return ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2) - p
