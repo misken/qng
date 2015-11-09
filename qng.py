@@ -1901,10 +1901,46 @@ def ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2):
     """
 
     # Use Eq 2.24 on p 125 to compute mean wait time in queue
-    qwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, ca2, cs2)
+    qwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
 
     # Now use Little's Law
     return qwait * arr_rate
+
+
+def ggm_mean_syssize_whitt(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate mean system size in GI/G/c/inf queue using Whitt's 1993 approximation and Little's Law.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+
+    It's based on interpolations with corrections between an M/D/c, D/M/c and a M/M/c queueing systems.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        mean wait time in queue
+
+    """
+
+    # Use Eq 2.24 on p 125 to compute mean wait time in queue
+    mean_sojourn = ggm_mean_sojourn_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    # Now use Little's Law
+    return mean_sojourn * arr_rate
 
 
 def dmm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
