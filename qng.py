@@ -2224,3 +2224,122 @@ def ggm_qwait_pctile_whitt(p, arr_rate, svc_rate, c, ca2, cs2):
 
 def _ggm_waitq_pctile_whitt_wrap(t, p, arr_rate, svc_rate, c, ca2, cs2):
     return ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2) - p
+
+
+def ggm_qsize_prob_gt_0_whitt_5_2(arr_rate, svc_rate, c, ca2, cs2):
+    """
+    Return the approximate P(Q>0) in G/G/m queue using Whitt's simple
+    approximation involving rho and P(W>0).
+
+    This approximation is exact for M/M/m and has strong theoretical
+    support for GI/M/m. It's described by Whitt as "crude" but is
+    "a useful quick approximation".
+
+    See Section 5 of Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161. In
+    particular, this is Equation 5.2.
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        ~ P(Q > 0)
+
+    """
+
+    rho = arr_rate / (svc_rate * float(c))
+    pdelay = ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
+
+    prob_gt_0 = rho * pdelay
+
+    return prob_gt_0
+
+
+def ggm_qsize_prob_gt_0_whitt_5_1(arr_rate, svc_rate, c, ca2, cs2):
+    """
+    Return the approximate P(Q>0) in G/G/m queue using Whitt's approximation
+    which is based on an exact expression for P(Q>0) given the CDF's
+    of an interarrival time and a waiting time .
+
+    This approximation is exact for M/M/m and has strong theoretical
+    support for GI/M/m - see Equation 5.1. It is preferred to the cruder
+    approximation given in Equation 5.2 (see ggm_qsize_prob_gt_0_whitt_5_2).
+
+    See Section 5 of Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161. In
+    particular, this is Equation 5.1.
+
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    cv2_svc_time : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        ~ P(Q > 0
+
+    """
+
+    rho = arr_rate / (svc_rate * float(c))
+    pdelay = ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
+
+    # TODO - implement Equation 5.1 of Whitt (1995)
+
+    return 0
+
+
+def ggm_qsize_whitt_cq2(arr_rate, svc_rate, m, ca2, cs2):
+    """
+    Return the approximate squared coefficient of queue size in G/G/m queue.
+
+    See Whitt, Ward. "Approximations for the GI/G/m queue"
+    Production and Operations Management 2, 2 (Spring 1993): 114-161.
+    Equation 5.6.
+
+    Parameters
+    ----------
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+    c : int
+        number of servers
+    ca2 : float
+        squared coefficient of variation for inter-arrival time distribution
+    cs2 : float
+        squared coefficient of variation for service time distribution
+
+    Returns
+    -------
+    float
+        scv of number in queue
+
+    """
+
+
+    eq = ggm_mean_qsize_whitt(arr_rate, svc_rate, m, ca2, cs2)
+
+    cw2 = ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2)
+
+    cq2 = (1/eq) + cw2
+
+    return cq2
