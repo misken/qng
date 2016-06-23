@@ -13,7 +13,7 @@ mu = 1
 ca2 = 1.0
 cs2 = 2.25
 approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
-whichpi = qng.ggm_prob_wait_whitt_whichpi(rho, m, ca2, cs2)
+whichpi = qng._ggm_prob_wait_whitt_whichpi(rho, m, ca2, cs2)
 print("exact={0}, whitt={1}, mywhitt={2:6.3f}, simio={3}, whichpi={4}".format(exact, whitt, approx, simio, whichpi))
 
 # D/H2/4 (cs2=2.0) -
@@ -27,5 +27,5 @@ mu = 1
 ca2 = 0.0
 cs2 = 2.0
 approx = qng.ggm_prob_wait_whitt(lam, mu, m, ca2, cs2)
-whichpi = qng.ggm_prob_wait_whitt_whichpi(rho, m, ca2, cs2)
+whichpi = qng._ggm_prob_wait_whitt_whichpi(rho, m, ca2, cs2)
 print("exact={0}, whitt={1}, mywhitt={2:6.3f}, simio={3}, whichpi={4}".format(exact, whitt, approx, simio, whichpi))

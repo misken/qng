@@ -909,7 +909,7 @@ def gamma_0(m, rho):
     return min(term1, term2)
 
 
-def ggm_mean_qwait_whitt_phi_1(m, rho):
+def _ggm_mean_qwait_whitt_phi_1(m, rho):
     """
     See p124 immediately after Eq 2.16.
 
@@ -924,7 +924,7 @@ def ggm_mean_qwait_whitt_phi_1(m, rho):
     return 1.0 + gamma_0(m, rho)
 
 
-def ggm_mean_qwait_whitt_phi_2(m, rho):
+def _ggm_mean_qwait_whitt_phi_2(m, rho):
     """
     See p124 immediately after Eq 2.18.
 
@@ -939,7 +939,7 @@ def ggm_mean_qwait_whitt_phi_2(m, rho):
     return 1.0 - 4.0 * gamma_0(m, rho)
 
 
-def ggm_mean_qwait_whitt_phi_3(m, rho):
+def _ggm_mean_qwait_whitt_phi_3(m, rho):
     """
     See p124 immediately after Eq 2.20.
 
@@ -951,13 +951,13 @@ def ggm_mean_qwait_whitt_phi_3(m, rho):
 
     """
 
-    term1 = ggm_mean_qwait_whitt_phi_2(m, rho)
+    term1 = _ggm_mean_qwait_whitt_phi_2(m, rho)
     term2 = math.exp(-2.0 * (1 - rho) / (3.0 * rho))
 
     return term1 * term2
 
 
-def ggm_mean_qwait_whitt_phi_4(m, rho):
+def _ggm_mean_qwait_whitt_phi_4(m, rho):
     """
     See p125 , Eq 2.21.
 
@@ -969,11 +969,11 @@ def ggm_mean_qwait_whitt_phi_4(m, rho):
 
     """
     term1 = 1.0
-    term2 = 0.5 * (ggm_mean_qwait_whitt_phi_1(m, rho) + ggm_mean_qwait_whitt_phi_3(m, rho))
+    term2 = 0.5 * (_ggm_mean_qwait_whitt_phi_1(m, rho) + _ggm_mean_qwait_whitt_phi_3(m, rho))
     return min(term1, term2)
 
 
-def ggm_mean_qwait_whitt_psi_0(c2, m, rho):
+def _ggm_mean_qwait_whitt_psi_0(c2, m, rho):
     """
     See p125 , Eq 2.22.
 
@@ -990,10 +990,10 @@ def ggm_mean_qwait_whitt_psi_0(c2, m, rho):
     if c2 >= 1:
         return 1.0
     else:
-        return ggm_mean_qwait_whitt_phi_4(m, rho) ** (2 * (1 - c2))
+        return _ggm_mean_qwait_whitt_phi_4(m, rho) ** (2 * (1 - c2))
 
 
-def ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m):
+def _ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m):
     """
     See p125 , Eq 2.25.
 
@@ -1011,13 +1011,13 @@ def ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m):
     """
 
     if ca2 >= cs2:
-        term1 = ggm_mean_qwait_whitt_phi_1(m, rho) * (4 * (ca2 - cs2) / (4 * ca2 - 3 * cs2))
-        term2 = (cs2 / (4 * ca2 - 3 * cs2)) * ggm_mean_qwait_whitt_psi_0((ca2 + cs2)/2.0, m, rho)
+        term1 = _ggm_mean_qwait_whitt_phi_1(m, rho) * (4 * (ca2 - cs2) / (4 * ca2 - 3 * cs2))
+        term2 = (cs2 / (4 * ca2 - 3 * cs2)) * _ggm_mean_qwait_whitt_psi_0((ca2 + cs2) / 2.0, m, rho)
         return term1 + term2
     else:
-        term1 = ggm_mean_qwait_whitt_phi_3(m, rho) * ( (cs2 - ca2) / (2 * ca2 + 2 * cs2) )
+        term1 = _ggm_mean_qwait_whitt_phi_3(m, rho) * ((cs2 - ca2) / (2 * ca2 + 2 * cs2))
         term2 = ( (cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2) )
-        term3 = ggm_mean_qwait_whitt_psi_0((ca2 + cs2)/2.0, m, rho)
+        term3 = _ggm_mean_qwait_whitt_psi_0((ca2 + cs2) / 2.0, m, rho)
         check = term2 * term3 / term1
         #print (check)
         return term1 + term2 * term3
@@ -1064,7 +1064,7 @@ def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         qwait = dmm_mean_qwait_whitt(arr_rate, svc_rate, m)
 
     else:
-        term1 = ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m)
+        term1 = _ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m)
         term2 = 0.5 * (ca2 + cs2)
         term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
@@ -1110,13 +1110,13 @@ def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         pwait = mgc_prob_wait_erlangc(arr_rate, svc_rate, m)
 
     else:
-        pi = ggm_prob_wait_whitt_pi(m, rho, ca2, cs2)
+        pi = _ggm_prob_wait_whitt_pi(m, rho, ca2, cs2)
         pwait = min(pi, 1)
 
     return pwait
 
 
-def ggm_prob_wait_whitt_z(ca2, cs2):
+def _ggm_prob_wait_whitt_z(ca2, cs2):
     """
     Equation 3.8 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1143,7 +1143,7 @@ def ggm_prob_wait_whitt_z(ca2, cs2):
     return z
 
 
-def ggm_prob_wait_whitt_gamma(m, rho, z):
+def _ggm_prob_wait_whitt_gamma(m, rho, z):
     """
     Equation 3.5 on p136 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1173,7 +1173,7 @@ def ggm_prob_wait_whitt_gamma(m, rho, z):
     return gamma
 
 
-def ggm_prob_wait_whitt_pi_6(m, rho, z):
+def _ggm_prob_wait_whitt_pi_6(m, rho, z):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1201,7 +1201,7 @@ def ggm_prob_wait_whitt_pi_6(m, rho, z):
     return pi_6
 
 
-def ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1236,7 +1236,7 @@ def ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2):
     return pi_5
 
 
-def ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1271,7 +1271,7 @@ def ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2):
     return pi_4
 
 
-def ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1296,15 +1296,15 @@ def ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2):
 
     """
 
-    pi_4 = ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2)
-    pi_5 = ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2)
+    pi_4 = _ggm_prob_wait_whitt_pi_4(m, rho, ca2, cs2)
+    pi_5 = _ggm_prob_wait_whitt_pi_5(m, rho, ca2, cs2)
 
     pi_1 = (rho ** 2) * pi_4 + (1.0 - rho **2) * pi_5
 
     return pi_1
 
 
-def ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1325,19 +1325,20 @@ def ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2):
     Returns
     -------
     float
-        intermediate term pi_5(see Eq 3.11)
+        intermediate term pi_2(see Eq 3.11)
 
     """
 
-    pi_1 = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
-    pi_6 = ggm_prob_wait_whitt_pi_6(m, rho, ca2, cs2)
+    pi_1 = _ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+    z = _ggm_prob_wait_whitt_z(ca2, cs2)
+    pi_6 = _ggm_prob_wait_whitt_pi_6(m, rho, z)
 
     pi_2 = ca2 * pi_1 + (1.0 - ca2) * pi_6
 
     return pi_2
 
 
-def ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2):
     """
     Part of Equation 3.11 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1361,10 +1362,10 @@ def ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2):
         intermediate term pi_5(see Eq 3.11)
 
     """
-    z = ggm_prob_wait_whitt_z(ca2, cs2)
-    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
-    pi_2 = ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
-    pi_1 = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+    z = _ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = _ggm_prob_wait_whitt_gamma(m, rho, z)
+    pi_2 = _ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
+    pi_1 = _ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
 
     term1 = 2.0 * (1.0 - ca2) * (gamma - 0.5)
     term2 = 1.0 - term1
@@ -1374,7 +1375,7 @@ def ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2):
     return pi_3
 
 
-def ggm_prob_wait_whitt_pi(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_pi(m, rho, ca2, cs2):
     """
     Equation 3.10 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1398,20 +1399,20 @@ def ggm_prob_wait_whitt_pi(m, rho, ca2, cs2):
         intermediate term pi_5(see Eq 3.11)
 
     """
-    z = ggm_prob_wait_whitt_z(ca2, cs2)
-    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
+    z = _ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = _ggm_prob_wait_whitt_gamma(m, rho, z)
 
     if m <= 6 or gamma <= 0.5 or ca2 >= 1:
-        pi = ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
+        pi = _ggm_prob_wait_whitt_pi_1(m, rho, ca2, cs2)
     elif m >= 7 and gamma >= 1.0 and ca2 < 1:
-        pi = ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
+        pi = _ggm_prob_wait_whitt_pi_2(m, rho, ca2, cs2)
     else:
-        pi = ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2)
+        pi = _ggm_prob_wait_whitt_pi_3(m, rho, ca2, cs2)
 
     return pi
 
 
-def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
+def _ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
     """
     Equation 3.10 on p139 of Whitt (1993). Used in approximation for P(Wq > 0) in GI/G/c/inf queue.
 
@@ -1437,8 +1438,8 @@ def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
         the pi case used in the approximation (1, 2, or 3)
 
     """
-    z = ggm_prob_wait_whitt_z(ca2, cs2)
-    gamma = ggm_prob_wait_whitt_gamma(m, rho, z)
+    z = _ggm_prob_wait_whitt_z(ca2, cs2)
+    gamma = _ggm_prob_wait_whitt_gamma(m, rho, z)
 
     if m <= 6 or gamma <= 0.5 or ca2 >= 1:
         whichpi = 1
@@ -1450,7 +1451,7 @@ def ggm_prob_wait_whitt_whichpi(m, rho, ca2, cs2):
     return whichpi
 
 
-def ggm_qcondwait_whitt_ds3(cs2):
+def _ggm_qcondwait_whitt_ds3(cs2):
     """
     Return the approximate E(V^3)/(EV)^2 where V is a service time; based on either a hyperexponential
     or Erlang distribution. Used in approximation of conditional wait time CDF (conditional on W>0).
@@ -1510,7 +1511,7 @@ def ggm_qcondwait_whitt_cd2(rho, cs2):
     """
 
     term1 = 2 * rho - 1.0
-    term2 = 4 * (1.0 - rho) * ggm_qcondwait_whitt_ds3(cs2)
+    term2 = 4 * (1.0 - rho) * _ggm_qcondwait_whitt_ds3(cs2)
     term3 = 3.0 * (cs2 + 1.0) ** 2
 
     cd2 = term1+ term2 / term3
@@ -1979,7 +1980,7 @@ def dmm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
     # Now implement Eq 2.20 on p 124
 
-    term1 = ggm_mean_qwait_whitt_phi_3(m, rho)
+    term1 = _ggm_mean_qwait_whitt_phi_3(m, rho)
     term2 = 0.5 * (ca2 + cs2)
     term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
@@ -2021,7 +2022,7 @@ def mdm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
     # Now implement Eq 2.16 on p 124
 
-    term1 = ggm_mean_qwait_whitt_phi_1(m, rho)
+    term1 = _ggm_mean_qwait_whitt_phi_1(m, rho)
     term2 = 0.5 * (ca2 + cs2)
     term3 = mmc_mean_qwait(arr_rate, svc_rate, m)
 
@@ -2226,7 +2227,7 @@ def _ggm_waitq_pctile_whitt_wrap(t, p, arr_rate, svc_rate, c, ca2, cs2):
     return ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2) - p
 
 
-def ggm_qsize_prob_gt_0_whitt_5_2(arr_rate, svc_rate, c, ca2, cs2):
+def _ggm_qsize_prob_gt_0_whitt_5_2(arr_rate, svc_rate, c, ca2, cs2):
     """
     Return the approximate P(Q>0) in G/G/m queue using Whitt's simple
     approximation involving rho and P(W>0).
@@ -2266,7 +2267,7 @@ def ggm_qsize_prob_gt_0_whitt_5_2(arr_rate, svc_rate, c, ca2, cs2):
     return prob_gt_0
 
 
-def ggm_qsize_prob_gt_0_whitt_5_1(arr_rate, svc_rate, c, ca2, cs2):
+def _ggm_qsize_prob_gt_0_whitt_5_1(arr_rate, svc_rate, c, ca2, cs2):
     """
     Return the approximate P(Q>0) in G/G/m queue using Whitt's approximation
     which is based on an exact expression for P(Q>0) given the CDF's
