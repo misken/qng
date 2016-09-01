@@ -555,7 +555,7 @@ def mdc_mean_qsize_cosmetatos(arr_rate, svc_rate, c):
     Returns
     -------
     float
-        mean wait time in queue
+        mean number of customers in queue
 
     """
 
@@ -588,7 +588,7 @@ def mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time):
     Returns
     -------
     float
-        mean number of customers in queue
+        mean wait time in queue
 
     """
 
