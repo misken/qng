@@ -104,6 +104,9 @@ def erlangc(load, c):
     """
 
     rho = load / float(c)
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
     eb = erlangb(load, c)
     ec = 1.0 / (rho + (1 - rho) * (1.0 / eb))
 
@@ -169,6 +172,9 @@ def mmc_prob_n(n, arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
 
     # Step 0: Initialization - p[0] is initialized to one via creation method
 
@@ -213,6 +219,8 @@ def mmc_mean_qsize(arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     mean_qsize = (rho ** 2 / (1 - rho) ** 2) * mmc_prob_n(c - 1, arr_rate, svc_rate, c)
 
@@ -241,6 +249,8 @@ def mmc_mean_syssize(arr_rate, svc_rate, c):
 
     load = arr_rate / svc_rate
     rho = load / float(c)
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     mean_qsize = (rho ** 2 / (1 - rho) ** 2) * mmc_prob_n(c - 1, arr_rate, svc_rate, c)
 
@@ -324,6 +334,9 @@ def mmc_prob_wait_normal(arr_rate, svc_rate, c):
     """
 
     load = arr_rate / svc_rate
+    rho = load / c
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     prob_wait = 1.0 - stats.norm.cdf(c - load - 0.5) / math.sqrt(load)
 
@@ -385,6 +398,8 @@ def mm1_qwait_cdf(t, arr_rate, svc_rate):
     """
 
     rho = arr_rate / svc_rate
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     term1 = rho
     term2 = -svc_rate * (1 - rho) * t
@@ -419,6 +434,8 @@ def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     term1 = rho / (1 - rho)
     term2 = mmc_prob_n(c - 1, arr_rate, svc_rate, c)
@@ -525,6 +542,8 @@ def mdc_mean_qwait_cosmetatos(arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     term1 = 0.5
     term2 = (c - 1) * (math.sqrt(4 + 5 * c) - 2) / (16 * c)
@@ -859,6 +878,9 @@ def mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time):
     """
 
     rho = arr_rate / svc_rate
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
     mean_qsize = (arr_rate ** 2) * cv2_svc_time/(2 * (1.0 - rho))
 
     return mean_qsize
@@ -1018,7 +1040,7 @@ def _ggm_mean_qwait_whitt_phi_0(rho, ca2, cs2, m):
         term1 = _ggm_mean_qwait_whitt_phi_3(m, rho) * ((cs2 - ca2) / (2 * ca2 + 2 * cs2))
         term2 = ( (cs2 + 3 * ca2) / (2 * ca2 + 2 * cs2) )
         term3 = _ggm_mean_qwait_whitt_psi_0((ca2 + cs2) / 2.0, m, rho)
-        check = term2 * term3 / term1
+        #check = term2 * term3 / term1
         #print (check)
         return term1 + term2 * term3
 
@@ -1053,6 +1075,8 @@ def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     # Now implement Eq 2.24 on p 125
 
@@ -1103,6 +1127,8 @@ def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     # For ca2 = 1 (e.g. Poisson arrivals), Whitt uses fact that Erlang-C works well for M/G/c
 
@@ -1547,6 +1573,9 @@ def ggm_qwait_whitt_cw2(arr_rate, svc_rate, m, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
     pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
     cd2 = ggm_qcondwait_whitt_cd2(rho, cs2)
 
@@ -1616,6 +1645,9 @@ def ggm_qcondwait_whitt_vard(arr_rate, svc_rate, m, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
     pwait = ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2)
     cd2 = ggm_qcondwait_whitt_cd2(rho, cs2)
     meanwait = ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2)
@@ -1977,6 +2009,8 @@ def dmm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     # Now implement Eq 2.20 on p 124
 
@@ -2019,6 +2053,8 @@ def mdm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2=0.0, cs2=1.0):
 
 
     rho = arr_rate / (svc_rate * float(m))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     # Now implement Eq 2.16 on p 124
 
@@ -2115,6 +2151,8 @@ def ggm_qcondwait_cdf_whitt(t, arr_rate, svc_rate, c, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
 
     ed = ggm_mean_qwait_whitt(arr_rate, svc_rate, c, ca2, cs2) / ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
 
@@ -2260,6 +2298,9 @@ def _ggm_qsize_prob_gt_0_whitt_5_2(arr_rate, svc_rate, c, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+
     pdelay = ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
 
     prob_gt_0 = rho * pdelay
@@ -2301,6 +2342,9 @@ def _ggm_qsize_prob_gt_0_whitt_5_1(arr_rate, svc_rate, c, ca2, cs2):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+    if rho >= 1.0:
+        raise ValueError("rho must be less than 1.0")
+    
     pdelay = ggm_prob_wait_whitt(arr_rate, svc_rate, c, ca2, cs2)
 
     # TODO - implement Equation 5.1 of Whitt (1995)
