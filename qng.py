@@ -432,6 +432,42 @@ def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
     return prob_wq_lt_t
 
 
+def mmc_qwait_cdf_inv(t, prob, arr_rate, svc_rate):
+    """
+    Return the number of servers such that probability of delay < t in M/M/c/inf system is
+    greater than specified prob
+
+
+    Parameters
+    ----------
+    t : float
+        wait time threshold
+    prob : float
+        threshold delay probability
+    arr_rate : float
+        average arrival rate to queueing system
+    svc_rate : float
+        average service rate (each server). 1/svc_rate is mean service time.
+
+    Returns
+    -------
+    c : int
+        number of servers
+
+    """
+
+    c = math.ceil(arr_rate / svc_rate)
+    pwait_lt_t = mmc_qwait_cdf(t, arr_rate, svc_rate, c)
+    if pwait_lt_t > prob:
+        return c
+    else:
+        while pwait_lt_t < prob:
+            c += 1
+            pwait_lt_t = mmc_qwait_cdf(t, arr_rate, svc_rate, c)
+
+    return c
+
+
 def mm1_qwait_pctile(p, arr_rate, svc_rate):
     """
     Return p'th percentile of P(Wq < t) in M/M/1/inf queue.
