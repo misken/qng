@@ -458,7 +458,7 @@ def mmc_qwait_cdf_inv(t, prob, arr_rate, svc_rate):
 
     c = math.ceil(arr_rate / svc_rate)
     pwait_lt_t = mmc_qwait_cdf(t, arr_rate, svc_rate, c)
-    if pwait_lt_t > prob:
+    if pwait_lt_t >= prob:
         return c
     else:
         while pwait_lt_t < prob:
