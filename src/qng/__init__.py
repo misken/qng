@@ -5,4 +5,4 @@
 #
 # so that user can do the following in their notebook or script:
 #
-#    from myproject import cool_function
+from qng import qng

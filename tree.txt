@@ -1,0 +1,47 @@
+.
+├── build
+│   ├── bdist.linux-x86_64
+│   └── lib
+│       └── qng
+│           ├── debug_condwaitpctile.py
+│           ├── __init__.py
+│           └── qng.py
+├── docs
+│   ├── conf.py
+│   ├── getting-started.rst
+│   ├── index.rst
+│   ├── make.bat
+│   ├── Makefile
+│   └── MyExcelQngModels.bas
+├── LICENSE
+├── models
+├── notebooks
+│   ├── input
+│   ├── output
+│   └── qng_hacking.ipynb
+├── README.md
+├── references
+├── reports
+│   └── figures
+├── setup.py
+├── src
+│   ├── qng
+│   │   ├── debug_condwaitpctile.py
+│   │   ├── __init__.py
+│   │   ├── input
+│   │   ├── output
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   └── qng.cpython-310.pyc
+│   │   └── qng.py
+│   └── qng.egg-info
+│       ├── dependency_links.txt
+│       ├── PKG-INFO
+│       ├── SOURCES.txt
+│       └── top_level.txt
+├── tests
+│   ├── test_ipython.py
+│   └── test_qng.py
+└── tree.txt
+
+19 directories, 25 files

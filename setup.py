@@ -8,4 +8,7 @@ setup(
     description='Library of queueing functions',
     author='misken',
     license='MIT',
+    install_requires=[
+        'scipy',
+    ],
 )

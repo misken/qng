@@ -5,7 +5,9 @@ import scipy.stats as stats
 import scipy.optimize
 import math
 
-
+def dummy():
+    return 42
+    
 def poissoninv(prob, mean):
     """
     Return the cumulative inverse of the Poisson distribution.
@@ -104,9 +106,9 @@ def erlangc(load, c):
     """
 
     rho = load / float(c)
-    # if rho >= 1.0:
-    #     raise ValueError("rho must be less than 1.0")
-    
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
+
     eb = erlangb(load, c)
     ec = 1.0 / (rho + (1 - rho) * (1.0 / eb))
 
@@ -133,7 +135,11 @@ def erlangcinv(prob, load):
 
     """
 
-    c = np.ceil(load)
+    if float(load).is_integer():
+        c = load + 1
+    else:
+        c = int(np.ceil(load))
+
     ec = erlangc(load, c)
     if ec <= prob:
         return c
@@ -172,6 +178,9 @@ def mmc_prob_n(n, arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     # Step 0: Initialization - p[0] is initialized to one via creation method
 
@@ -217,6 +226,9 @@ def mmc_mean_qsize(arr_rate, svc_rate, c):
 
     rho = arr_rate / (svc_rate * float(c))
 
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
+
     mean_qsize = (rho ** 2 / (1 - rho) ** 2) * mmc_prob_n(c - 1, arr_rate, svc_rate, c)
 
     return mean_qsize
@@ -244,6 +256,9 @@ def mmc_mean_syssize(arr_rate, svc_rate, c):
 
     load = arr_rate / svc_rate
     rho = load / float(c)
+
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     mean_qsize = (rho ** 2 / (1 - rho) ** 2) * mmc_prob_n(c - 1, arr_rate, svc_rate, c)
 
@@ -328,6 +343,10 @@ def mmc_prob_wait_normal(arr_rate, svc_rate, c):
 
     load = arr_rate / svc_rate
 
+    rho = load / float(c)
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
+
     prob_wait = 1.0 - stats.norm.cdf(c - load - 0.5) / np.sqrt(load)
 
     return prob_wait
@@ -360,6 +379,9 @@ def mgc_prob_wait_erlangc(arr_rate, svc_rate, c):
 
     load = arr_rate / svc_rate
 
+    if load >= c:
+        raise ValueError("Traffic intensity >= 1.0")
+
     prob_wait = erlangc(load, c)
 
     return prob_wait
@@ -388,6 +410,9 @@ def mm1_qwait_cdf(t, arr_rate, svc_rate):
     """
 
     rho = arr_rate / svc_rate
+
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     term1 = rho
     term2 = -svc_rate * (1 - rho) * t
@@ -422,6 +447,9 @@ def mmc_qwait_cdf(t, arr_rate, svc_rate, c):
     """
 
     rho = arr_rate / (svc_rate * float(c))
+
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     term1 = rho / (1 - rho)
     term2 = mmc_prob_n(c - 1, arr_rate, svc_rate, c)
@@ -565,6 +593,9 @@ def mdc_mean_qwait_cosmetatos(arr_rate, svc_rate, c):
 
     rho = arr_rate / (svc_rate * float(c))
 
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
+
     term1 = 0.5
     term2 = (c - 1) * (np.sqrt(4 + 5 * c) - 2) / (16 * c)
     term3 = (1 - rho) / rho
@@ -630,6 +661,11 @@ def mgc_mean_qwait_kimura(arr_rate, svc_rate, c, cv2_svc_time):
         mean wait time in queue
 
     """
+
+    load = arr_rate / svc_rate
+
+    # if load >= c:
+    #     raise ValueError("Traffic intensity >= 1.0")
 
     term1 = 1.0 + cv2_svc_time
     term2 = 2.0 * cv2_svc_time / mmc_mean_qwait(arr_rate, svc_rate, c)
@@ -709,6 +745,10 @@ def mgc_qwait_cdf_whitt(t, arr_rate, svc_rate, c, cs2):
 
     """
 
+    load = arr_rate / svc_rate
+    rho = load / float(c)
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     pwait_lt_t = ggm_qwait_cdf_whitt(t, arr_rate, svc_rate, c, 1.0, cs2)
 
@@ -817,6 +857,7 @@ def mgc_qcondwait_pctile_firstorder_2moment(prob, arr_rate, svc_rate, c, cv2_svc
     """
 
     load = arr_rate / svc_rate
+
     # Compute corresponding prob for unconditional wait (see p274 of Tjims)
     equivalent_uncond_prob = 1.0 - (1.0 - prob) * erlangc(load, c)
     # Compute conditional wait time percentile for M/M/c system to use in approximation
@@ -898,6 +939,9 @@ def mg1_mean_qsize(arr_rate, svc_rate, cv2_svc_time):
     """
 
     rho = arr_rate / svc_rate
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
+
     mean_qsize = (arr_rate ** 2) * cv2_svc_time/(2 * (1.0 - rho))
 
     return mean_qsize
@@ -941,6 +985,9 @@ def gamma_0(m, rho):
     :return: float
 
     """
+
+    if rho >= 1.0:
+        raise ValueError("Traffic intensity >= 1.0")
 
     term1 = 0.24
     term2 = (1 - rho) * (m - 1) * (math.sqrt(4 + 5 * m) - 2 ) / (16 * m * rho)
@@ -1077,7 +1124,7 @@ def ggm_mean_qwait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         average arrival rate to queueing system
     svc_rate : float
         average service rate (each server). 1/svc_rate is mean service time.
-    c : int
+    m : int
         number of servers
     ca2 : float
         squared coefficient of variation for inter-arrival time distribution
@@ -1129,7 +1176,7 @@ def ggm_prob_wait_whitt(arr_rate, svc_rate, m, ca2, cs2):
         average arrival rate to queueing system
     svc_rate : float
         average service rate (each server). 1/svc_rate is mean service time.
-    c : int
+    m : int
         number of servers
     ca2 : float
         squared coefficient of variation for inter-arrival time distribution
